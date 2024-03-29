@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <title>Todo List</title>
+</head>
+<body>
+    <body>
+        <div class="jumbotron text-center" style="margin-bottom:0">
+            <h1>Todo List</h1>
+        </div>
+    
+        <div class="container" style="margin-top: 30px;">
+            <div class="row">
+                <div class="col-sm-12">  <!--전체 페이지를 컬럼을 12개로 기본으로 봄 --> 
+                    <div class="input-group mb-3"> <!-- mb는 파트를 뜻함 -->
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">오늘의 할일</div>
+                        </div>  
+                        <input id="newTitle" type="text" class="form-control" placeholder="할일을 입력하세요" />    
+                    <div class="input-group-append">
+                        <button id="saveBtn" class="btn btn-primary">생성</button>
+                    </div>              
+                </div>
+            </div>
+        </div>
+        <hr>
+            <div class="row">
+                <div class="col-sm-12">
+                    <ul id="todoListUI" class="nav nav-pills flex-column">
+                        <!--자바스크립트가 처리해서 insert해주는 부분-->
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <script>
+            // 객체 현태로 배열에 저장
+            //{no:01, title:'9시 전체회의', done:false}
+            let todoList = [];
+            let noCnt = 0;
+
+
+            if(localStorage.getItem("todoListData") == null) {
+            localStorage.setItem("todoListData", JSON.stringify({noCnt, todoList}));
+        } else {
+            let todoListData = JSON.parse(localStorage.getItem("todoListData"));
+            noCnt = todoListData.noCnt;
+            todoList = todoListData.todoList;
+        }
+
+        let saveBtn =document.getElementById('saveBtn');
+
+        // 버튼 이벤트를 자바스크립트로 받기
+        saveBtn.onclick = function(e) { 
+            let newTitle = document.getElementById('newTitle').value;
+
+            // 객체 생성
+            let newTodo = {no:noCnt++, title:newTitle, done:false };
+            todoList.push(newTodo);
+
+            //할일 입력값 지우고 포커스 이동하기
+            let todoInputValue = document.getElementById('newTitle');
+            todoInputValue.value = '';
+            todoInputValue.focus();
+            
+            //목록을 리랜더링
+            reRender();  // 함수호출
+          }    
+
+          // 체크박스 최신화 함수
+          function handleCheck(element) {
+            let idx = todoList.findIndex(item => {
+                return item.no == element.dataset.no;
+            });
+            if(idx !== -1) {
+                let titleInput = 
+            element.parentElement.parentElement.parentElement.querySelector('input[type=text]');
+            todoList[idx].title = titleInput.value;
+            todoList[idx].done = !todoList[idx].done;
+            reRender();
+            localStorage.setItem("todoListData", JSON.stringify({noCnt, todoList}));
+            }
+          }
+
+          //handleKeyup() 함수 구현 => 사용자에 대한 배려 
+          function handleKeyup(element){
+            if(event.keyCode === 13) {     //엔터키를 눌렀을때 ~~처리해라
+                let editBtn = element.nextElementSibling.firstElementChild; // 수정버튼edit을 누르는것과 동일하게 진행
+                handleEditBtn(editBtn);
+            }
+          }
+
+        // 저장버튼 함수
+          function handleSaveBtn(element) {
+            let idx = todoList.findIndex(item =>{
+                return item.no == element.dataset.no;
+            });
+            if(idx !== -1){
+                let rowElement = element.parentElement.parentElement;
+                rowElement.querySelector("input[type=text]").disabled = true;
+                let titleInput = rowElement.querySelector("input[type=text]");
+                let doneCheck = rowElement.querySelector("input[type=checkbox]");
+
+                todoList[idx].title = titleInput.value;
+                todoList[idx].done = doneCheck.checked;
+
+                reRender();
+                localStorage.setItem("todoListData", JSON.stringify({noCnt, todoList}));
+            }
+        }
+
+          // 수정버튼 함수
+          function handleEditBtn(element) {
+            let idx = todoList.findIndex(item =>{
+                return item.no == element.dataset.no;
+            });
+            if(idx !== -1){
+                let rowElement = element.parentElement.parentElement;
+                rowElement.querySelector("input[type=text]").disabled = false
+                rowElement.querySelector("button.btn-success").innerText = "저장";
+                rowElement.querySelector("button.btn-success").onclick = function() {
+                    handleSaveBtn(this);
+                }
+                reRender();
+            }
+          }
+
+          // 삭제버튼 함수
+          function handleDelBtn(element) {
+            let idx = todoList.findIndex(item =>{
+                return item.no == element.dataset.no;
+            });
+            if(idx !== -1){
+                todoList.splice(idx, 1);  // 인덱스 위치에서 하나만 삭제한다!!
+            
+                reRender();
+                localStorage.setItem("todoListData", JSON.stringify({noCnt, todoList}));
+            }
+          }
+
+
+          //handleBlur() 함수 구현
+          function handleBlur(element) {
+            let editBtn = element.nextElementSibling.firstElementChild;
+            handleEditBtn(editBtn);
+          }
+
+          // 리렌더링 함수
+          function reRender() {
+            let todoListUI = document.getElementById("todoListUI");
+            todoListUI.innerHTML = "";   //반복하기 전에 초기화 필수 
+            todoList.forEach((item, idx) => {
+                let rowHtmlData = `<li class = "nav-item">
+                    <div class="input-group mb-4">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">
+                                <input type="checkbox" data-no="${item.no}" 
+                                onchange="handleCheck(this)"
+                                ${item.done? "checked":""}/>    
+                            </div>
+                        </div>
+                      
+                        <input type="text" onkeyup="handleKeyup(this)" 
+                        onblur="handleBlur(this)" 
+                        style="text-decoration:${item.done?"line-through":"none"};"
+                        value="${item.title}" class="form-control" disabled/>
+                    
+                        <div class="input-group-append">
+                            <button data-no="${item.no}" 
+                            onclick="handleEditBtn(this)" class="btn btn-success">수정</button>
+                        </div>
+                        <div class="input-group-append">
+                            <button data-no="${item.no}" 
+                            onclick="handleDelBtn(this)" class="btn btn-danger">지우기</button>
+
+                    </div>
+                    </div>
+
+                    <li>`;
+                        todoListUI.innerHTML += rowHtmlData;
+            });
+          }   
+          reRender();
+    </script>
+</body>
+</html>
