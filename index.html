@@ -1,3 +1,4 @@
+<!-- 다른 사람 블로그 예제를 개선해서 올림 -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -38,16 +39,16 @@
         <script>
             // 객체 현태로 배열에 저장
             //{no:01, title:'9시 전체회의', done:false}
+            // data_no = no 엘리먼트를 구분
             let todoList = [];
             let noCnt = 0;
 
 
             if(localStorage.getItem("todoListData") == null) {
-            localStorage.setItem("todoListData", JSON.stringify({noCnt, todoList}));
+            localStorage.setItem("todoListData", JSON.stringify(todoList));
         } else {
             let todoListData = JSON.parse(localStorage.getItem("todoListData"));
-            noCnt = todoListData.noCnt;
-            todoList = todoListData.todoList;
+            todoList = todoListData;
         }
 
         let saveBtn =document.getElementById('saveBtn');
@@ -67,6 +68,7 @@
             
             //목록을 리랜더링
             reRender();  // 함수호출
+            localStorage.setItem("todoListData", JSON.stringify(todoList));
           }    
 
           // 체크박스 최신화 함수
@@ -80,11 +82,11 @@
             todoList[idx].title = titleInput.value;
             todoList[idx].done = !todoList[idx].done;
             reRender();
-            localStorage.setItem("todoListData", JSON.stringify({noCnt, todoList}));
+            localStorage.setItem("todoListData", JSON.stringify(todoList));
             }
           }
 
-          //handleKeyup() 함수 구현 => 사용자에 대한 배려 
+          //handleKeyup() 함수 
           function handleKeyup(element){
             if(event.keyCode === 13) {     //엔터키를 눌렀을때 ~~처리해라
                 let editBtn = element.nextElementSibling.firstElementChild; // 수정버튼edit을 누르는것과 동일하게 진행
@@ -107,7 +109,7 @@
                 todoList[idx].done = doneCheck.checked;
 
                 reRender();
-                localStorage.setItem("todoListData", JSON.stringify({noCnt, todoList}));
+                localStorage.setItem("todoListData", JSON.stringify(todoList));
             }
         }
 
@@ -136,10 +138,9 @@
                 todoList.splice(idx, 1);  // 인덱스 위치에서 하나만 삭제한다!!
             
                 reRender();
-                localStorage.setItem("todoListData", JSON.stringify({noCnt, todoList}));
+                localStorage.setItem("todoListData", JSON.stringify(todoList));
             }
           }
-
 
           //handleBlur() 함수 구현
           function handleBlur(element) {
